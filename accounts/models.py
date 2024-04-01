@@ -110,7 +110,7 @@ class User(AbstractBaseUser):
 class Profile(models.Model):
     def upload_desgin_to(self, filename):
         return f'user_profile/{self.user.id}/{filename}'
-    user  = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     frist_name = models.CharField(max_length=15)
     last_name = models.CharField(max_length=15)
     full_name = models.CharField(max_length=30, blank=True, null=True)
@@ -121,7 +121,6 @@ class Profile(models.Model):
 
     def __str__ (self):
         return str(self.user)
-    
 
 
 
