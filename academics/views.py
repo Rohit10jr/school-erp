@@ -51,6 +51,20 @@ from utils.pagination import Paginator
 
 
 
+class TestEditView(RetrieveUpdateDestroyAPIView):
+    serializer_class = TestSerializer
+    permission_classes = [AllowAny]
+    queryset = Test.objects.all().order_by('grade', 'subject')
+
+    def retrieve(self, request, pk):
+        try:
+            queryset = Test.objects.get(pk=pk)
+        except:
+            return Response({'status':'failure', 'data':'Test doesnt exists'}, status=HTTP_206_PARTIAL_CONTENT)
+        serializer = TestSerializer(queryset)
+        return Response(serializer.data, status=HTTP_206_PARTIAL_CONTENT)
+        
+
 
 class TestResultCreateView(CreateAPIView):
     serializer_class = TestResultSerializer
@@ -58,8 +72,38 @@ class TestResultCreateView(CreateAPIView):
     permission_classes = [AllowAny]
 
     def get(self, request, foramt=None):
-        pass
-
+        queryset = TestResult.objects.all()
+        grade = (self.request.query_params.get('grade'))
+        student = self.request.query_params.get('student_id')
+        test_id = self.request.query_params.get('test_id')
+        if grade:
+            if student:
+                try:
+                    grade = Grade.objects.get(grade=grade)
+                    queryset = TestResult.objects.filter(
+                        grade=grade, student_id=student)
+                except:
+                    queryset = TestResult.objects.all()
+            else:
+                try:
+                    grade = Grade.objects.get(grade=grade)
+                    queryset = TestResult.objects.filter(grade=grade) 
+                except:
+                    return Response({"status": ResponseChoices.FAILURE, 'data': serializer.errors}, status=HTTP_206_PARTIAL_CONTENT)
+        elif test_id:
+            queryset = TestResult.Objects.filter(test_id=test_id)
+        queryset = TestResult.objects.all()
+        print(type(queryset))
+        data = self.paginate_queryset(queryset)
+        serializer = TestResultSerializer(data, many=True)
+        return self.get_paginated_response(serializer.data)
+    
+    def create(self, request):
+        serializer = TestResultSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':ResponseChoices.SUCCESS, 'data':serializer.data}, status=HTTP_201_CREATED)
+        return Response({'status':ResponseChoices.FAILURE, 'data':serializer.errors}, status=HTTP_206_PARTIAL_CONTENT)
 
 
 
